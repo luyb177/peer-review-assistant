@@ -1,0 +1,11 @@
+target/
+.tools/
+.idea/
+*.iml
+config/application.properties
+config/*.local.properties
+config/*.pem
+config/*.p12
+logs/
+*.log
+screenshots/

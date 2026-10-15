@@ -1,0 +1,75 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Microsoft YaHei
+hide empty members
+package domain {
+  class User <<record>> { id : long
+    username : String
+    name : String
+    role : Role
+  }
+  class Course <<record>> { id : long
+    teacherId : long
+  }
+  class Assignment <<record>> { id : long
+    phase : Phase
+    reviewOpen : LocalDateTime
+    reviewDeadline : LocalDateTime
+    blind : boolean
+  }
+  class Criterion <<record>> { weight : BigDecimal
+    min : BigDecimal
+    max : BigDecimal
+  }
+  class Submission <<record>> { content : String
+    submittedAt : LocalDateTime
+  }
+  class ReviewTask <<record>> { status : TaskStatus
+    total : BigDecimal
+    comment : String
+  }
+  class ReviewDetail <<record>> { scores : Map
+    total : BigDecimal
+  }
+  class Advice <<record>>
+}
+User "1" -- "0..*" Course : 教师拥有
+Course "1" -- "0..*" Assignment
+Assignment "1" *-- "1..20" Criterion
+Assignment "1" -- "0..*" Submission
+User "1" -- "0..*" Submission : 学生提交
+Submission "1" -- "0..*" ReviewTask
+User "1" -- "0..*" ReviewTask : 学生评审
+ReviewTask "1" -- "0..1" ReviewDetail
+ReviewTask "1" -- "0..1" Advice
+interface ScoringPolicy { validateCriteria(criteria)
+ calculate(criteria, scores) : BigDecimal
+}
+class ScoreCalculator
+ScoreCalculator ..|> ScoringPolicy
+interface AdviceProvider { generate(input) : String }
+class ClaudeAdviceProvider
+ClaudeAdviceProvider ..|> AdviceProvider
+class PeerReviewService
+class AuthService
+class InitializationService
+class Repository
+class Database { read(work)
+ transaction(work)
+}
+class WorkspaceFrame
+class ReviewDialog
+class LoginFrame
+PeerReviewService --> ScoringPolicy
+PeerReviewService --> Repository
+PeerReviewService --> Database
+PeerReviewService --> RandomAllocator
+AuthService --> Database
+InitializationService --> Database
+WorkspaceFrame --> PeerReviewService
+WorkspaceFrame --> AuthService
+ReviewDialog --> PeerReviewService
+ReviewDialog --> AdviceProvider
+LoginFrame --> AuthService
+LoginFrame --> InitializationService
+@enduml
