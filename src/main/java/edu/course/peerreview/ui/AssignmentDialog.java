@@ -13,6 +13,9 @@ import java.util.List;
 public final class AssignmentDialog extends JDialog {
     public static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm").withResolverStyle(ResolverStyle.STRICT);
     public AssignmentDialog(Window owner, PeerReviewService service, User actor, List<Course> courses, Assignment old, Runnable updated) {
+        this(owner,service,null,actor,courses,old,List.of(),updated);
+    }
+    public AssignmentDialog(Window owner,PeerReviewService service,AttachmentService attachmentService,User actor,List<Course> courses,Assignment old,List<AttachmentInfo> existing,Runnable updated) {
         super(owner, old == null ? "发布新作业" : "编辑作业", ModalityType.APPLICATION_MODAL);
         JComboBox<Course> course = new JComboBox<>(courses.toArray(Course[]::new));
         if (old != null) { courses.stream().filter(c -> c.id() == old.courseId()).findFirst().ifPresent(course::setSelectedItem); course.setEnabled(false); }
@@ -31,6 +34,7 @@ public final class AssignmentDialog extends JDialog {
         JPanel rules = new JPanel(new BorderLayout()); rules.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
         rules.add(Ui.toolbar(Ui.title("评分规则", 16), Ui.button("添加维度", () -> model.addRow(new Object[]{"新维度", "0", "0", "100"})), Ui.button("删除所选维度", () -> { if (criteria.getSelectedRow() >= 0) model.removeRow(criteria.getSelectedRow()); })), BorderLayout.NORTH);
         rules.add(new JScrollPane(criteria));
+        AttachmentEditorPanel files=new AttachmentEditorPanel(existing,id -> attachmentService.download(actor,id));
         JButton save = Ui.primary("保存作业", () -> {
             if (criteria.isEditing() && !criteria.getCellEditor().stopCellEditing()) throw new BusinessException("请先完成评分项编辑。");
             if (course.getSelectedItem() == null) throw new BusinessException("请先创建课程。");
@@ -40,9 +44,11 @@ public final class AssignmentDialog extends JDialog {
             List<Criterion> items = new ArrayList<>();
             for (int row = 0; row < model.getRowCount(); row++) items.add(new Criterion(row + 1, String.valueOf(model.getValueAt(row, 0)), Validation.parseDecimal(String.valueOf(model.getValueAt(row, 1)), "权重"), Validation.parseDecimal(String.valueOf(model.getValueAt(row, 2)), "最低分"), Validation.parseDecimal(String.valueOf(model.getValueAt(row, 3)), "最高分")));
             long courseId = ((Course) course.getSelectedItem()).id(); String name = title.getText(), desc = description.getText(); boolean anonymous = blind.isSelected();
-            Ui.work(this, () -> { service.saveAssignment(actor, old == null ? 0 : old.id(), courseId, name, desc, start, end, anonymous, items); return true; }, v -> { dispose(); updated.run(); });
+            var changes=files.changes();
+            Ui.work(this, () -> service.saveAssignmentWithAttachments(actor, old == null ? 0 : old.id(), courseId, name, desc, start, end, anonymous, items,changes), v -> { dispose(); updated.run(); });
         });
-        add(form, BorderLayout.NORTH); add(rules); add(Ui.toolbar(save, Ui.button("取消", this::dispose)), BorderLayout.SOUTH);
-        setSize(880, 800); setMinimumSize(new Dimension(780, 700)); setLocationRelativeTo(owner);
+        JPanel center=new JPanel(new BorderLayout(0,6));center.add(rules);center.add(files,BorderLayout.SOUTH);
+        add(form, BorderLayout.NORTH); add(center); add(Ui.toolbar(save, Ui.button("取消", this::dispose)), BorderLayout.SOUTH);
+        setSize(980, 880); setMinimumSize(new Dimension(780, 700)); setLocationRelativeTo(owner);
     }
 }

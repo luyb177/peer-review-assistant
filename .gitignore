@@ -4,6 +4,8 @@ target/
 *.iml
 config/application.properties
 config/*.local.properties
+config/profiles/
+config/course-demo.properties
 config/*.pem
 config/*.p12
 logs/

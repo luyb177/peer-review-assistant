@@ -18,7 +18,7 @@ public final class ClaudeAdviceProvider implements AdviceProvider {
         if (!config.aiEnabled()) throw new BusinessException("AI 尚未启用，请在本地配置中设置 ai.enabled=true。");
         if (config.aiKey().isBlank()) throw new BusinessException("未配置 AI API Key；请填写本地配置或 PEER_REVIEW_AI_KEY 环境变量。");
         URI uri = AiEndpoint.parse(config.get("ai.baseUrl"));
-        var client = AnthropicOkHttpClient.builder().baseUrl(uri.toString()).apiKey(config.aiKey())
+        var client = AnthropicOkHttpClient.builder().baseUrl(AiServices.anthropicBase(uri.toString())).apiKey(config.aiKey())
                 .timeout(Duration.ofSeconds(config.timeoutSeconds())).maxRetries(0).build();
         try {
             var builder = MessageCreateParams.builder().model(config.get("ai.model")).maxTokens(16000)

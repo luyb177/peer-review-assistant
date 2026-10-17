@@ -18,6 +18,7 @@ public final class WorkspaceFrame extends JFrame {
     private final User actor;
     private final PeerReviewService service;
     private final AuthService auth;
+    private final AttachmentService attachments;
     private final Runnable loggedOut;
     private final JComboBox<Choice> courseFilter = new JComboBox<>(), assignmentFilter = new JComboBox<>(), statusFilter = new JComboBox<>();
     private final JTextField regex = new JTextField(18);
@@ -39,7 +40,7 @@ public final class WorkspaceFrame extends JFrame {
     private boolean changing;
 
     private record Choice(String id, String label) { @Override public String toString() { return label; } }
-    record SubmissionRow(Assignment assignment, Submission submission) { }
+    record SubmissionRow(Assignment assignment, Submission submission, String searchable) { }
     record TaskRow(Assignment assignment, ReviewTask task) { }
     record StatRow(Assignment assignment, Statistics statistics) { }
     record ViewData(List<Course> courses, List<Assignment> assignments, List<SubmissionRow> submissions,
@@ -48,14 +49,14 @@ public final class WorkspaceFrame extends JFrame {
     public WorkspaceFrame(AppConfig config, Database db, AdviceProvider ai, User actor, Runnable loggedOut) {
         super("课堂同伴互评助手 · " + (actor.role() == Role.TEACHER ? "教师工作台" : "学生工作台"));
         this.config = config; this.ai = ai; this.actor = actor; this.loggedOut = loggedOut;
-        service = new PeerReviewService(db); auth = new AuthService(db);
+        service = new PeerReviewService(db); auth = new AuthService(db); attachments=new AttachmentService(db);
         setJMenuBar(menuBar());
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         JPanel root = new JPanel(new BorderLayout(0, 14)); root.setBorder(BorderFactory.createEmptyBorder(20, 24, 16, 24)); root.setBackground(Ui.PAPER);
         JPanel top = new JPanel(new BorderLayout()); top.setOpaque(false);
         JPanel heading = Ui.column(); heading.setOpaque(false); heading.add(Ui.title("课堂同伴互评", 28));
         heading.add(new JLabel((teacher() ? "教师工作台" : "学生工作台") + "    " + actor.name() + "（" + actor.username() + "）")); top.add(heading);
-        top.add(Ui.toolbar(Ui.button("刷新数据", this::refresh), Ui.button("修改密码", this::changePassword), Ui.button("连接配置", () -> new ConfigDialog(this, config).setVisible(true)), Ui.button("退出登录", () -> { dispose(); loggedOut.run(); })), BorderLayout.EAST);
+        top.add(Ui.toolbar(Ui.button("刷新数据", this::refresh), Ui.button("修改密码", this::changePassword), Ui.button("连接配置", () -> new ConfigDialog(this, config, () -> { dispose(); loggedOut.run(); }).setVisible(true)), Ui.button("退出登录", () -> { dispose(); loggedOut.run(); })), BorderLayout.EAST);
         JPanel north = new JPanel(new BorderLayout(0, 12)); north.setOpaque(false); north.add(top, BorderLayout.NORTH);
         courseFilter.setPreferredSize(new Dimension(170, 32)); assignmentFilter.setPreferredSize(new Dimension(240, 32));
         statusFilter.addItem(new Choice("", "全部任务状态")); statusFilter.addItem(new Choice("PENDING", "待互评")); statusFilter.addItem(new Choice("COMPLETED", "已完成"));
@@ -67,14 +68,14 @@ public final class WorkspaceFrame extends JFrame {
         if (teacher()) tabs.addTab("作业管理", panel(assignments, Ui.primary("发布作业", () -> editAssignment(null)), Ui.button("编辑作业", () -> editAssignment(selectedAssignment())), Ui.button("删除作业", this::deleteAssignment), Ui.button("随机分配互评", this::allocate), Ui.button("结束互评", this::closeAssignment), Ui.button("查看要求", this::requirements)));
         else tabs.addTab("课堂作业", panel(assignments, Ui.primary("提交 / 更新作业", this::submit), Ui.button("查看要求", this::requirements)));
         tabs.addTab(teacher() ? "全部提交" : "我的提交", panel(submissions, Ui.button("阅读所选提交", this::readSubmission)));
-        tabs.addTab(teacher() ? "互评进度" : "我的互评任务", panel(tasks, Ui.primary(teacher() ? "查看互评详情" : "打开人工评分", this::review)));
+        tabs.addTab(teacher() ? "互评进度" : "我的互评任务", panel(tasks, Ui.primary(teacher() ? "查看互评详情" : "查看 / 填写互评", this::review)));
         tabs.addTab(teacher() ? "结果统计" : "我的成绩", teacher() ? panel(statistics, Ui.button("导出当前统计 CSV", this::export)) : panel(statistics));
         if (teacher()) {
             tabs.addTab("学生账号", panel(users, Ui.primary("添加学生账号", this::createStudent), Ui.button("编辑学生姓名", this::renameStudent), Ui.button("删除未使用学生", this::deleteStudent)));
             tabs.addTab("操作记录", panel(logs));
         }
         root.add(tabs);
-        JPanel footer = new JPanel(new BorderLayout()); footer.setOpaque(false); footer.add(status); JLabel note = new JLabel("AI 仅供参考 · 最终评分由学生决定"); note.setForeground(Ui.MUTED); footer.add(note, BorderLayout.EAST); root.add(footer, BorderLayout.SOUTH);
+        JPanel footer = new JPanel(new BorderLayout()); footer.setOpaque(false); footer.add(status); JLabel note = new JLabel(config.usesCourseDemo() ? "课程默认服务结课后关闭；可切换自己的服务" : "AI 仅供参考 · 最终评分由学生决定"); note.setForeground(Ui.MUTED); footer.add(note, BorderLayout.EAST); root.add(footer, BorderLayout.SOUTH);
         add(root); setSize(1320, 850); setMinimumSize(new Dimension(1200, 740)); setLocationRelativeTo(null);
         courseFilter.addActionListener(e -> { if (!changing) Ui.safely(this::applyFilters); });
         assignmentFilter.addActionListener(e -> { if (!changing) Ui.safely(this::applyFilters); });
@@ -85,11 +86,11 @@ public final class WorkspaceFrame extends JFrame {
     private JMenuBar menuBar() {
         JMenuBar bar = new JMenuBar(); JMenu classroom = new JMenu("课堂"); JMenu help = new JMenu("帮助");
         JMenuItem reload = new JMenuItem("刷新数据"); reload.setAccelerator(KeyStroke.getKeyStroke("F5")); reload.addActionListener(e -> refresh());
-        JMenuItem settings = new JMenuItem("本地连接配置"); settings.addActionListener(e -> new ConfigDialog(this, config).setVisible(true));
+        JMenuItem settings = new JMenuItem("本地连接配置"); settings.addActionListener(e -> new ConfigDialog(this, config, () -> { dispose(); loggedOut.run(); }).setVisible(true));
         JMenuItem logout = new JMenuItem("退出登录"); logout.addActionListener(e -> { dispose(); loggedOut.run(); });
         classroom.add(reload); classroom.add(settings); classroom.addSeparator(); classroom.add(logout);
-        JMenuItem guide = new JMenuItem("使用流程"); guide.addActionListener(e -> Ui.info(this, "教师：发布课程作业 → 等待学生提交 → 随机分配 → 查看进度与统计。\n学生：提交作业 → 打开待评任务 → 手动逐项评分、撰写评语 → 提交。\nAI 是可选的参考阅读，不会替你给分。详细说明见项目 README。"));
-        JMenuItem about = new JMenuItem("关于"); about.addActionListener(e -> Ui.info(this, "课堂同伴互评助手 1.0.0\nJava / Swing / JDBC / MySQL\n课程个人项目：以规则和人工判断为核心。"));
+        JMenuItem guide = new JMenuItem("使用流程"); guide.addActionListener(e -> Ui.info(this, "教师：发布课程作业 → 等待学生提交 → 随机分配 → 查看进度与统计。\n学生：提交作业 → 打开待评任务 → 手动逐项评分、撰写评语 → 提交。\n互评截止前且作业未结束时，本人可以修改评分或撤回；撤回后恢复待评。\nAI 是可选的参考阅读，不会替你给分。详细说明见项目 README。"));
+        JMenuItem about = new JMenuItem("关于"); about.addActionListener(e -> Ui.info(this, "课堂同伴互评助手 1.1.0\nJava / Swing / JDBC / MySQL\n课程个人项目：以规则和人工判断为核心。"));
         help.add(guide); help.add(about); bar.add(classroom); bar.add(help); return bar;
     }
     private boolean teacher() { return actor.role() == Role.TEACHER; }
@@ -102,7 +103,7 @@ public final class WorkspaceFrame extends JFrame {
         List<Course> cs = service.courses(actor); List<Assignment> as = service.assignments(actor);
         List<SubmissionRow> ss = new ArrayList<>(); List<TaskRow> ts = new ArrayList<>(); List<StatRow> rs = new ArrayList<>();
         for (Assignment a : as) {
-            service.submissions(actor, a.id()).forEach(s -> ss.add(new SubmissionRow(a, s)));
+            service.submissions(actor, a.id()).forEach(s -> ss.add(new SubmissionRow(a, s, attachments.searchableText(actor,s.id()))));
             service.tasks(actor, a.id()).forEach(t -> ts.add(new TaskRow(a, t)));
             service.statistics(actor, a.id()).forEach(s -> rs.add(new StatRow(a, s)));
         }
@@ -126,7 +127,7 @@ public final class WorkspaceFrame extends JFrame {
         // 先验证正则并计算所有候选列表，再更新界面，避免半刷新状态。
         List<TaskRow> filteredTasks = filter.apply(data.tasks(), selected, regex.getText(), r -> r.task().content() + "\n" + Objects.toString(r.task().comment(), ""));
         TableFilter<SubmissionRow> submissionFilter = new TableFilter<>(Map.of("course", r -> Long.toString(r.assignment().courseId()), "assignment", r -> Long.toString(r.assignment().id())));
-        List<SubmissionRow> filteredSubmissions = submissionFilter.apply(data.submissions(), Map.of("course", choice(courseFilter), "assignment", choice(assignmentFilter)), regex.getText(), r -> r.submission().content());
+        List<SubmissionRow> filteredSubmissions = submissionFilter.apply(data.submissions(), Map.of("course", choice(courseFilter), "assignment", choice(assignmentFilter)), regex.getText(), SubmissionRow::searchable);
         shownCourses = data.courses().stream().filter(c -> choice(courseFilter).isEmpty() || choice(courseFilter).equals(Long.toString(c.id()))).toList();
         shownAssignments = data.assignments().stream().filter(this::visible).toList(); shownSubmissions = filteredSubmissions; shownTasks = filteredTasks;
         shownStats = data.statistics().stream().filter(r -> visible(r.assignment())).toList();
@@ -139,7 +140,7 @@ public final class WorkspaceFrame extends JFrame {
         Ui.rows(logs, data.logs().stream().map(row -> (Object[]) row).toList());
         status.setText("显示 " + shownAssignments.size() + " 份作业、" + shownTasks.size() + " 条互评任务。正则仅搜索提交正文和评语；状态仅筛选任务。");
     }
-    private String excerpt(String s) { return s.replace('\n', ' ').substring(0, Math.min(70, s.length())); }
+    private String excerpt(String s) { return s.isBlank()?"文档提交（打开查看附件）":s.replace('\n', ' ').substring(0, Math.min(70, s.length())); }
     private String phase(Phase phase) { return switch (phase) { case SUBMISSION -> "收集提交"; case REVIEWING -> "互评中"; case CLOSED -> "已结束"; }; }
     private Assignment selectedAssignment() { return shownAssignments.get(Ui.selected(assignments)); }
     private void editCourse(Course old) {
@@ -149,7 +150,11 @@ public final class WorkspaceFrame extends JFrame {
         String title = name.getText(), description = desc.getText(); Ui.work(this, () -> { service.saveCourse(actor, old == null ? 0 : old.id(), title, description); return true; }, v -> refresh());
     }
     private void deleteCourse() { Course c = shownCourses.get(Ui.selected(courses)); if (Ui.confirm(this, "删除课程「" + c.name() + "」？有作业的课程不会被删除。")) Ui.work(this, () -> { service.deleteCourse(actor, c.id()); return true; }, v -> refresh()); }
-    private void editAssignment(Assignment old) { if (data.courses().isEmpty()) throw new BusinessException("请先创建课程。"); new AssignmentDialog(this, service, actor, data.courses(), old, this::refresh).setVisible(true); }
+    private void editAssignment(Assignment old) {
+        if(data.courses().isEmpty())throw new BusinessException("请先创建课程。");
+        if(old==null)new AssignmentDialog(this,service,attachments,actor,data.courses(),null,List.of(),this::refresh).setVisible(true);
+        else Ui.work(this,()->attachments.assignmentFiles(actor,old.id()),files->new AssignmentDialog(this,service,attachments,actor,data.courses(),old,files,this::refresh).setVisible(true));
+    }
     private void deleteAssignment() { Assignment a = selectedAssignment(); if (Ui.confirm(this, "删除作业「" + a.title() + "」？已有学生提交时不会删除。")) Ui.work(this, () -> { service.deleteAssignment(actor, a.id()); return true; }, v -> refresh()); }
     private void allocate() {
         Assignment a = selectedAssignment(); String input = JOptionPane.showInputDialog(this, "每份提交由几名学生评审？\n只在已提交学生间分配，排除自评并保证负载均衡。", "2"); if (input == null) return;
@@ -160,19 +165,20 @@ public final class WorkspaceFrame extends JFrame {
     private void requirements() {
         Assignment a = selectedAssignment(); StringBuilder text = new StringBuilder(a.description()).append("\n\n互评开始：").append(AssignmentDialog.TIME.format(a.reviewOpen())).append("\n互评截止：").append(AssignmentDialog.TIME.format(a.reviewDeadline())).append("\n\n评分规则：\n");
         a.criteria().forEach(c -> text.append(c.name()).append("：").append(c.weight()).append("%，区间 ").append(c.min()).append("—").append(c.max()).append('\n'));
-        Ui.textDialog(this, a.title(), text.toString());
+        Ui.work(this,()->attachments.assignmentFiles(actor,a.id()),files->AttachmentViewerPanel.show(this,a.title(),text.toString(),files,id->attachments.download(actor,id)));
     }
     private void submit() {
         Assignment a = selectedAssignment(); String old = data.submissions().stream().filter(s -> s.assignment().id() == a.id()).map(s -> s.submission().content()).findFirst().orElse("");
-        JDialog dialog = new JDialog(this, "提交作业 · " + a.title(), true); JTextArea content = Ui.area(old, true);
-        dialog.add(new JScrollPane(content)); dialog.add(Ui.toolbar(Ui.primary("保存提交", () -> { String text = content.getText(); Ui.work(dialog, () -> { service.submit(actor, a.id(), text); return true; }, v -> { dialog.dispose(); refresh(); }); }), Ui.button("取消", dialog::dispose)), BorderLayout.SOUTH);
-        dialog.setSize(780, 580); dialog.setLocationRelativeTo(this); dialog.setVisible(true);
+        Ui.work(this,()->attachments.ownSubmissionFiles(actor,a.id()),files->new SubmissionDialog(this,service,attachments,actor,a,old,files,this::refresh).setVisible(true));
     }
-    private void readSubmission() { SubmissionRow row = shownSubmissions.get(Ui.selected(submissions)); Ui.textDialog(this, row.assignment().title() + " · " + row.submission().author(), row.submission().content()); }
-    private record ReviewView(Assignment assignment, ReviewTask task, ReviewDetail detail, Advice advice) { }
+    private void readSubmission() {
+        SubmissionRow row=shownSubmissions.get(Ui.selected(submissions));
+        Ui.work(this,()->attachments.submissionFiles(actor,row.submission().id()),files->AttachmentViewerPanel.show(this,row.assignment().title()+" · "+row.submission().author(),row.submission().content(),files,id->attachments.download(actor,id)));
+    }
+    private record ReviewView(Assignment assignment, ReviewTask task, ReviewDetail detail, Advice advice,List<AttachmentInfo> files,List<AttachmentInfo> materials) { }
     private void review() {
         long id = shownTasks.get(Ui.selected(tasks)).task().id();
-        Ui.work(this, () -> { ReviewTask t = service.task(actor, id); return new ReviewView(service.assignment(actor, t.assignmentId()), t, service.reviewDetail(actor, id), service.advice(actor, id)); }, v -> new ReviewDialog(this, config, service, ai, actor, v.assignment(), v.task(), v.detail(), v.advice(), this::refresh).setVisible(true));
+        Ui.work(this, () -> { ReviewTask t = service.task(actor, id); return new ReviewView(service.assignment(actor, t.assignmentId()), t, service.reviewDetail(actor, id), service.advice(actor, id),attachments.reviewFiles(actor,id),attachments.assignmentFiles(actor,t.assignmentId())); }, v -> new ReviewDialog(this, config, service, ai, actor, v.assignment(), v.task(), v.detail(), v.advice(),v.files(),v.materials(),fileId->attachments.download(actor,fileId), this::refresh).setVisible(true));
     }
     private void export() {
         if (!teacher()) throw new BusinessException("完整 CSV 导出仅对教师开放；学生可查看自己的成绩。");

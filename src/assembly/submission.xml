@@ -5,7 +5,8 @@
     <fileSet><directory>src</directory><outputDirectory>src</outputDirectory></fileSet>
     <fileSet><directory>docs</directory><outputDirectory>docs</outputDirectory></fileSet>
     <fileSet><directory>sql</directory><outputDirectory>sql</outputDirectory></fileSet>
-    <fileSet><directory>config</directory><outputDirectory>config</outputDirectory><includes><include>application.example.properties</include></includes></fileSet>
+    <fileSet><directory>scripts</directory><outputDirectory>scripts</outputDirectory><includes><include>*.cmd</include><include>*.ps1</include></includes></fileSet>
+    <fileSet><directory>config</directory><outputDirectory>config</outputDirectory><includes><include>application.example.properties</include><include>release-demo.example.properties</include></includes></fileSet>
     <fileSet><directory>${project.build.directory}/surefire-reports</directory><outputDirectory>test-results</outputDirectory><includes><include>*.txt</include><include>TEST-*.xml</include></includes></fileSet>
     <fileSet><directory>${project.build.directory}/ui-preview</directory><outputDirectory>docs/ui-preview</outputDirectory><includes><include>*.png</include></includes></fileSet>
   </fileSets>

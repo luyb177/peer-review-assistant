@@ -1,0 +1,4 @@
+PASS: dedicated demo database schema and non-root login verified.
+PASS: course demo teacher and six synthetic students ready.
+PASS: AI 连接与认证成功，模型列表可访问（3 项）；未发起生成请求。
+No generation or personal development data changes.

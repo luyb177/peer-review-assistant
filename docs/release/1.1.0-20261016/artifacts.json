@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-16",
+  "failures": 0,
+  "demoCredentialsIncluded": false,
+  "artifacts": [
+    {
+      "name": "peer-review-assistant.jar",
+      "sha256": "F3D277ABC05C176B58872479AEC2449811E04CA89213F5DB6235076478C595CF",
+      "bytes": 49213662
+    },
+    {
+      "name": "peer-review-assistant-submission.zip",
+      "sha256": "AC240A606CA652FF1B383111005584FF1E94BCF2A5E6B0511F10D3B82E0F23C0",
+      "bytes": 47876962
+    },
+    {
+      "name": "peer-review-assistant-1.1.0-windows-x64-20261016-211814.zip",
+      "sha256": "6B03A1913A372AD77194D2BDFF31EEDCDE74C60EAFAB903EF1821DE5BEDE2DD3",
+      "bytes": 88909257
+    }
+  ],
+  "externalServicesCalled": false,
+  "skipped": 0,
+  "packagedJarTests": 123,
+  "version": "1.1.0",
+  "sourceTests": 123
+}

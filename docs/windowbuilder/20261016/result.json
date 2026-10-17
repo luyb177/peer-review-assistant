@@ -1,0 +1,11 @@
+{
+  "result": "PASS",
+  "editor": "org.eclipse.wb.internal.core.editor.multi.DesignerEditor",
+  "source": "src/main/java/edu/course/peerreview/ui/LoginPanel.java",
+  "property": "JLabel.text",
+  "before": "进入课堂",
+  "after": "登录互评课堂",
+  "sourceSha256Before": "1080af6cba400ec2753c65c3789681117e6df3a3767f2e480bb027d5477c0a49",
+  "sourceSha256After": "c6627c3ae30e2090b3207e4ef7227d1cfd15f487f8dbb7910172281d939bb133",
+  "changedThroughPropertyEditor": true
+}

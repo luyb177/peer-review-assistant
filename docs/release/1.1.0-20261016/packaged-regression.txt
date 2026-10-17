@@ -1,0 +1,15 @@
+Product loaded from: file:/D:/WorkSpace/002_Code/IdeaProjects/peer-review-assistant/target/independent-1.1.0/peer-review-assistant/bin/peer-review-assistant.jar
+
+Test run finished after 17426 ms
+[        27 containers found      ]
+[         0 containers skipped    ]
+[        27 containers started    ]
+[         0 containers aborted    ]
+[        27 containers successful ]
+[         0 containers failed     ]
+[       123 tests found           ]
+[         0 tests skipped         ]
+[       123 tests started         ]
+[         0 tests aborted         ]
+[       123 tests successful      ]
+[         0 tests failed          ]

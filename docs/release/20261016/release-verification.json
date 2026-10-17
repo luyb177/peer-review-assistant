@@ -1,0 +1,19 @@
+{
+  "result": "PASS",
+  "portableArchive": "peer-review-assistant-1.0.0-windows-x64-20261016-184420.zip",
+  "portableSha256": "c2e21ab6168f4684484368755301efdb3b22083579dcbb13417d70932d2bae9e",
+  "jarSha256": "a26f842770977ddfb2894104a145a6ba589df1f70c7b853baccf0b0e9130b86d",
+  "tests": {
+    "tests": 95,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "testJava": "17.0.20.1",
+  "uiScenarioChecks": 8,
+  "uiFinalSummary": 1,
+  "isolatedRuntime": true,
+  "freshOperatingSystemVm": false,
+  "defaultAiProbe": "authenticated models GET only; no completion",
+  "demoCredentialsIntentional": "dedicated course-demo settings only; excluded from source and Git"
+}

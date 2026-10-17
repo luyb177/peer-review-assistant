@@ -31,7 +31,7 @@ public final class Domain {
     public record ReviewTask(long id, long assignmentId, long submissionId, long reviewerId,
                              String author, String reviewer, String content,
                              TaskStatus status, BigDecimal total, String comment) { }
-    public record ReviewDetail(long taskId, Map<Long, BigDecimal> scores, String comment, BigDecimal total) {
+    public record ReviewDetail(long taskId, long reviewId, long version, Map<Long, BigDecimal> scores, String comment, BigDecimal total) {
         public ReviewDetail { scores = Map.copyOf(scores); }
     }
     public record Statistics(long submissionId, String author, int completed, int assigned,
@@ -39,4 +39,10 @@ public final class Domain {
     public record Allocation(long submissionId, long reviewerId) { }
     public record Participant(long submissionId, long studentId) { }
     public record Advice(String text, String model, LocalDateTime createdAt) { }
+    public record AttachmentInfo(long id, String name, String mediaType, long size, String sha256,
+                                 String textStatus, LocalDateTime createdAt) { }
+    public record AttachmentDownload(AttachmentInfo info, byte[] content, String text) {
+        public AttachmentDownload { content = content.clone(); }
+        @Override public byte[] content() { return content.clone(); }
+    }
 }

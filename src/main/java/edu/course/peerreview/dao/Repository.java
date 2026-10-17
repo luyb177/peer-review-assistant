@@ -39,6 +39,9 @@ public final class Repository {
         if (studentId != null) return query(c, sql + " AND s.student_id=? ORDER BY s.id", this::submission, assignmentId, studentId);
         return query(c, sql + " ORDER BY s.id", this::submission, assignmentId);
     }
+    public Submission submission(Connection c, long id) throws SQLException {
+        return one(query(c, "SELECT s.*,u.display_name author FROM submissions s JOIN users u ON u.id=s.student_id WHERE s.id=?", this::submission, id));
+    }
     private Submission submission(ResultSet r) throws SQLException { return new Submission(r.getLong("id"), r.getLong("assignment_id"), r.getLong("student_id"), r.getString("author"), r.getString("content"), r.getTimestamp("submitted_at").toLocalDateTime()); }
     public static final String TASK_SQL = "SELECT t.*,s.assignment_id,s.content,s.student_id,u.display_name author,rv.display_name reviewer,r.total,r.comment FROM review_tasks t JOIN submissions s ON s.id=t.submission_id JOIN users u ON u.id=s.student_id JOIN users rv ON rv.id=t.reviewer_id LEFT JOIN reviews r ON r.task_id=t.id";
     private ReviewTask task(ResultSet r) throws SQLException {
@@ -53,7 +56,7 @@ public final class Repository {
         List<ReviewDetail> found = query(c, "SELECT * FROM reviews WHERE task_id=?", r -> {
             Map<Long, BigDecimal> scores = new LinkedHashMap<>();
             query(c, "SELECT * FROM review_scores WHERE review_id=?", s -> { scores.put(s.getLong("criterion_id"), s.getBigDecimal("score")); return 0; }, r.getLong("id"));
-            return new ReviewDetail(taskId, scores, r.getString("comment"), r.getBigDecimal("total"));
+            return new ReviewDetail(taskId, r.getLong("id"), r.getLong("version"), scores, r.getString("comment"), r.getBigDecimal("total"));
         }, taskId);
         return found.isEmpty() ? null : found.get(0);
     }

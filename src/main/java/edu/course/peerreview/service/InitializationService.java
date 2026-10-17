@@ -54,12 +54,21 @@ public final class InitializationService {
                 while (tables.next()) existing.add(tables.getString("TABLE_NAME").toLowerCase(java.util.Locale.ROOT));
             }
             // 管理员已建齐表时不再执行 DDL，应用账号只需数据读写权限。
-            if (!expected.isEmpty() && existing.containsAll(expected)) return null;
+            if (!expected.isEmpty() && existing.containsAll(expected)) {
+                requireReviewVersion(c);
+                return null;
+            }
             try (var s = c.createStatement()) {
                 for (String part : sql.split(";")) if (!part.isBlank()) s.execute(part);
             }
             return null;
         });
+    }
+    private void requireReviewVersion(java.sql.Connection c) throws java.sql.SQLException {
+        try (var columns = c.getMetaData().getColumns(c.getCatalog(), c.getSchema(), "reviews", "%")) {
+            while (columns.next()) if ("version".equalsIgnoreCase(columns.getString("COLUMN_NAME"))) return;
+        }
+        throw new BusinessException("数据库尚未升级互评版本字段，请管理员在专用库执行 sql/01-review-version.sql；不要重新初始化或清空数据。");
     }
     private long assignment(java.sql.Connection c, long course, String title, LocalDateTime open, LocalDateTime deadline) throws java.sql.SQLException {
         long id = insert(c, "INSERT INTO assignments(course_id,title,description,review_open,review_deadline,blind,phase) VALUES(?,?,?,?,?,?,?)", course, title, "分析分层设计、面向对象原则及测试方案。请提交纯文本，不要在内容中署名。", open, deadline, true, Phase.SUBMISSION);

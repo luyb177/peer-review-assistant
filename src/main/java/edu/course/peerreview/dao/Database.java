@@ -14,17 +14,18 @@ public final class Database {
 
     public Database(AppConfig config) {
         this(() -> {
+            AppConfig snapshot = config.copy();
             Properties properties = new Properties();
-            properties.setProperty("user", config.get("db.user"));
-            properties.setProperty("password", config.get("db.password"));
-            if (!config.get("db.trustStore").isBlank()) {
-                Path store = config.path().toAbsolutePath().getParent().resolve(config.get("db.trustStore"));
+            properties.setProperty("user", snapshot.get("db.user"));
+            properties.setProperty("password", snapshot.get("db.password"));
+            if (!snapshot.get("db.trustStore").isBlank()) {
+                Path store = config.path().toAbsolutePath().getParent().resolve(snapshot.get("db.trustStore"));
                 properties.setProperty("trustCertificateKeyStoreUrl", store.toUri().toString());
                 properties.setProperty("trustCertificateKeyStoreType", "PKCS12");
-                properties.setProperty("trustCertificateKeyStorePassword", config.get("db.trustStorePassword"));
+                properties.setProperty("trustCertificateKeyStorePassword", snapshot.get("db.trustStorePassword"));
                 properties.setProperty("fallbackToSystemTrustStore", "false");
             }
-            return DriverManager.getConnection(config.get("db.url"), properties);
+            return DriverManager.getConnection(snapshot.get("db.url"), properties);
         });
     }
     public Database(ConnectionFactory factory) { this.factory = factory; }
@@ -51,6 +52,8 @@ public final class Database {
     private BusinessException failure(SQLException e) {
         String state = e.getSQLState();
         if (state != null && state.startsWith("23")) return new BusinessException("记录冲突或仍被其他数据引用，请刷新后重试。", e);
+        if (("42S22".equals(state) || "S0022".equals(state)) && java.util.Objects.toString(e.getMessage(), "").toLowerCase(java.util.Locale.ROOT).contains("version"))
+            return new BusinessException("数据库缺少互评版本字段，请管理员执行 sql/01-review-version.sql 后重试；不要清空数据。", e);
         return new BusinessException("数据库操作失败，请检查远程地址、网络、TLS、账号权限以及是否已初始化表结构。", e);
     }
 }

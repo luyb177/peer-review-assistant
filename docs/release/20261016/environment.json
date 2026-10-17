@@ -1,0 +1,10 @@
+{
+  "java_home": "empty",
+  "path": "Windows System32 only",
+  "working_directory": "unrelated empty directory",
+  "user_home": "isolated directory",
+  "ide_required": false,
+  "maven_required": false,
+  "test_method": "actual jar entry point with a test-only UI instrumentation agent",
+  "fresh_os_vm": false
+}

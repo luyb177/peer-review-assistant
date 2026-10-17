@@ -1,0 +1,217 @@
+{
+  "date": "2026-10-16",
+  "source_version": "1.1.0",
+  "verification": "Maven test rerun in this documentation task; no external MySQL/paid AI",
+  "test_runtime": "Temurin 17.0.20.1",
+  "totals": {
+    "tests": 123,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "class": "edu.course.peerreview.AiAndTransactionTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.874,
+      "java_version": "17.0.20.1",
+      "report_sha256": "69d394bba1653b647080288aa7fe677dcb6aca751f79cd1fb3185f7f17e9701a"
+    },
+    {
+      "class": "edu.course.peerreview.AiConfigurationTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.574,
+      "java_version": "17.0.20.1",
+      "report_sha256": "538bda320d04aca6993d9ea8ce3afd88ac2ee8878c2cb209ec867fbe5b6f56c8"
+    },
+    {
+      "class": "edu.course.peerreview.AiEndpointTest",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.072,
+      "java_version": "17.0.20.1",
+      "report_sha256": "377936107ab5ccf2b21545da4978e653b7c693ec1c256047f17d1e28e2bc694d"
+    },
+    {
+      "class": "edu.course.peerreview.AttachmentDocumentsTest",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.556,
+      "java_version": "17.0.20.1",
+      "report_sha256": "14072fd21ce9d5b77eabbd38f311bb9bab79f6b440aa118275fd0c542b38c4c9"
+    },
+    {
+      "class": "edu.course.peerreview.AttachmentServiceTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.441,
+      "java_version": "17.0.20.1",
+      "report_sha256": "210c7acf3f4409caeef43d9fd2b6c480777b402e5183302a5c7a8e84d2b666f1"
+    },
+    {
+      "class": "edu.course.peerreview.ConfigurationSwitchTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.028,
+      "java_version": "17.0.20.1",
+      "report_sha256": "cff3a9d50b73cb5935d26829188297c633f1b2599a8be89158fc8cb8182b6934"
+    },
+    {
+      "class": "edu.course.peerreview.InitializationServiceTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.254,
+      "java_version": "17.0.20.1",
+      "report_sha256": "6e5ad6e110f3186fa052697dcc5db1bb6aa2bd05f0722a6e27534e568eed10f3"
+    },
+    {
+      "class": "edu.course.peerreview.PeerReviewServiceTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.386,
+      "java_version": "17.0.20.1",
+      "report_sha256": "18709a00ef77359e29afebeb8d341e2646b0c195e90084853c9e9091915eb755"
+    },
+    {
+      "class": "edu.course.peerreview.RandomAllocatorTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.05,
+      "java_version": "17.0.20.1",
+      "report_sha256": "de9e9c228ea5dde505b88f91f222c4ae95438351b1a7cc64d2652141834b04c0"
+    },
+    {
+      "class": "edu.course.peerreview.ReviewMutationTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.695,
+      "java_version": "17.0.20.1",
+      "report_sha256": "de9034d80bb86a8c9b46c83623293381949de8251ebc17527257eb35b62eddef"
+    },
+    {
+      "class": "edu.course.peerreview.SchemaManagerTest",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.6,
+      "java_version": "17.0.20.1",
+      "report_sha256": "9b273c5c749eeeaf4114ccdb9827142bd6fb5adafa7ef0fa02c00d8d1f4c6ee5"
+    },
+    {
+      "class": "edu.course.peerreview.ScoreCalculatorTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.033,
+      "java_version": "17.0.20.1",
+      "report_sha256": "0afa465592b482813947e2e4bd8f0fb025577b31b4d09c54af804b0af194283a"
+    },
+    {
+      "class": "edu.course.peerreview.ScoringPolicyTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.116,
+      "java_version": "17.0.20.1",
+      "report_sha256": "ed2200994367dffb7482aff2f425bbfcc61028300d81366438c8462211f83e6f"
+    },
+    {
+      "class": "edu.course.peerreview.ui.AttachmentUiTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 4.526,
+      "java_version": "17.0.20.1",
+      "report_sha256": "3d57e669373a61cb7918be43a6b34d567999a5b019e01b2f680b42984fae7988"
+    },
+    {
+      "class": "edu.course.peerreview.ui.LoginPanelTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.621,
+      "java_version": "17.0.20.1",
+      "report_sha256": "c27b12ccd6f5a9e62a2da0de7b605c7f668ad9c900b13169a6a483c0069b9ec4"
+    },
+    {
+      "class": "edu.course.peerreview.ui.ReviewMutationUiTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 2.726,
+      "java_version": "17.0.20.1",
+      "report_sha256": "db5a0f7467da648d4b96f8008a7cab1f0fce713c8a458d9ff5c3693d8a5b8c3f"
+    },
+    {
+      "class": "edu.course.peerreview.ui.SwingPreviewTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.495,
+      "java_version": "17.0.20.1",
+      "report_sha256": "f8737f44bac79f69bba56338e2c03885dc3bb5150ef2c0b8d33cb3cafe5c7138"
+    },
+    {
+      "class": "edu.course.peerreview.UtilitiesTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.723,
+      "java_version": "17.0.20.1",
+      "report_sha256": "321d0a86cbbbb77285eaac9b9c254afaa776f83ccab4bd240c0dcfceef4286ef"
+    }
+  ],
+  "schema_tables": [
+    "users",
+    "courses",
+    "assignments",
+    "criteria",
+    "submissions",
+    "review_tasks",
+    "reviews",
+    "review_scores",
+    "ai_advice",
+    "attachments",
+    "operation_logs"
+  ],
+  "existing_jar": {
+    "relative_path": "target/peer-review-assistant.jar",
+    "version": "1.0.0",
+    "contains_attachment_classes": false,
+    "sha256": "a26f842770977ddfb2894104a145a6ba589df1f70c7b853baccf0b0e9130b86d",
+    "status": "historical 1.0.0; NOT a current 1.1.0 delivery"
+  },
+  "latest_historical_live_evidence": "docs/acceptance/1016-203530-c2f4/report.md",
+  "new_package_built_this_task": false,
+  "external_api_called_this_task": false
+}

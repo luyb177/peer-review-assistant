@@ -1,0 +1,4 @@
+PASS: first isolated QA database contains all 10 app-created tables and only its own initialized teacher.
+PASS: nonexistent-database preparation produced all 10 tables without accounts.
+PASS: no QA teacher was written into the default shared demo database.
+PASS: temporary QA databases and DDL setup account removed after successful validation; default/development databases preserved.

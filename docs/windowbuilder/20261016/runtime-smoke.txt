@@ -1,0 +1,1 @@
+PASS: App.main launched actual refactored LoginPanel; real teacher login through configured public MySQL succeeded; workspace refresh completed; no AI generation or data creation.

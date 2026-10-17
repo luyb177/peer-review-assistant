@@ -1,0 +1,2 @@
+PASS: run.cmd used bundled runtime even with invalid JAVA_HOME, Windows-System32-only PATH and unrelated starting directory.
+Peer Review Assistant 1.0.0

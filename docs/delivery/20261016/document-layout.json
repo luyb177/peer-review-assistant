@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-16",
+  "renderer": "Local WPS Word-compatible COM; TOC and page fields updated",
+  "documents": [
+    {
+      "name": "交付说明与当前进度",
+      "pages": 6,
+      "text_outside_page": 0
+    },
+    {
+      "name": "用户简易使用手册",
+      "pages": 8,
+      "text_outside_page": 0
+    },
+    {
+      "name": "课程设计报告",
+      "pages": 46,
+      "text_outside_page": 0
+    }
+  ],
+  "visual_inspection": "All-page contact sheets and selected full-resolution pages inspected",
+  "limitations": "Pagination may differ in other Word implementations and fonts"
+}

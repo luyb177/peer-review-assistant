@@ -1,0 +1,12 @@
+{
+  "result" : "PASS",
+  "method" : "Separate JVM, read-only real MySQL queries through the extracted product JAR",
+  "javaVersion" : "17.0.20.1",
+  "jarSha256" : "f3d277abc05c176b58872479aec2449811e04ca89213f5db6235076478c595cf",
+  "submissions" : 3,
+  "reviews" : 6,
+  "aiAdvice" : 1,
+  "attachmentsVerifiedByBytesAndSha256" : 6,
+  "averages" : [ "78.50", "81.50", "85.00" ],
+  "externalAiGeneration" : false
+}

@@ -1,138 +1,61 @@
 # 课堂同伴互评助手
 
-Java 17+ / Maven / Swing / MySQL + JDBC / JUnit。课程个人项目，不是 Web 服务。
+软件构造课程个人项目，最终交付版本 1.1.0。Java 17、Maven、Swing、MySQL/JDBC、JUnit；不是 Web 应用。
 
-教师设置评分规则并分配互评，学生参考 AI 意见后独立打分和写评语。AI 不会生成可直接落库的人工评分。
+已实现任务书全部必选与四项选做：课程/作业/学生管理、动态评分、文本/文档提交、随机 N 人分配、盲评、人工互评、AI 参考、正则与表驱动筛选、统计和 CSV，以及防重复、日志、教师/学生文档和匿名开关。支持本人截止前修改或撤回评分。
 
-## 当前实现
+## 最终验证与文档
 
-- 教师/学生登录，PBKDF2 密码存储、创建/编辑/删除未使用学生账号和修改密码。
-- 课程和作业管理，动态评分维度、权重、分值区间、时间、盲评开关。
-- 学生文本提交、截止前更新、教师查看全部提交。
-- 洗牌错位分配：每份 N 人、不自评、不重复、评审负载均衡。
-- 互评任务状态、人工逐项评分与评语、事务保存、重复提交防护。
-- Anthropic 官方 Java SDK 的真实 AI 接口实现；默认关闭，凭据后配。
-- 正则搜索、表驱动组合筛选、平均/最高/最低分、CSV 导出。
-- MySQL 业务持久化、本地配置、操作日志、JUnit 回归和事务并发测试。
+- 默认回归 123 项通过，失败/错误/跳过均为 0。
+- 最终 Windows 便携包独立解压，以包内 Java 17 和实际 java -jar 完成两批真实 MySQL/Swing 实测：30 个主流程检查点和 25 个修改/撤回及补充检查点均通过。两批有重复启动检查，不混算为 55 个独立功能。
+- 实际 AI 内容生成一次，参考意见与人工评分独立保存；另有故障恢复及模型列表 GET 检查。
+- 新 JVM 读取三份提交、六次评分、一条 AI 意见和六个附件，字节、SHA-256 与统计均正确。
+- 产品 JAR SHA-256：f3d277abc05c176b58872479aec2449811e04ca89213f5db6235076478c595cf。
 
-**已完成 `lty-server-1` 专用库建表、受限账号授权、教师初始化及本地 AI 网关最小请求联调。仍未执行 package，未生成应用 JAR 或提交压缩包。**
+[课程设计报告](docs/课程设计报告.md)、[用户手册](docs/用户简易使用手册.md)、[最终交付说明](docs/交付说明与当前进度.md)的 DOCX 与 Markdown 均更新为最终状态。
 
-当前机器直接使用被忽略的 `config/application.properties`，不要再用公开模板覆盖它。首个教师用户名和初始密码见本机 `config/initial-login.local.properties`，首次登录后请修改密码。具体部署状态及限制见 [远程联调记录](docs/远程联调记录.md)。
+[完整实机验收](docs/release/1.1.0-final-live-20261016/最终运行包实机验收.md)含原始中断、修正和恢复记录；未发现产品业务缺陷，修正的是验收驱动。早期 1.0.0 或开发类路径记录仅为历史证据。
 
-## 1. 在 IDEA 中打开
+## 运行
 
-直接以 Maven 项目打开本目录，Project SDK 选择 JDK 17 或更高版本，然后刷新 Maven 依赖。
+完整作业包的 03_运行程序/peer-review-assistant 自带 Java 17，双击 run.cmd，无需 IDEA/Maven 或系统 Java。源码目录含 bin/peer-review-assistant.jar，已安装 Java 17+ 时也可运行 run.cmd 或 java -jar bin/peer-review-assistant.jar。
 
-运行主类：`edu.course.peerreview.App`。Working directory 设为项目根目录。
+分发包不含数据库密码、API Key 或维护者演示服务凭据。登录页打开“连接配置”填写自己的 MySQL；新空专用库通过“初始化专用库”设置首个教师，按需选择合成演示数据。数据库账号与应用教师账号不同。AI 暂时关闭时仍可人工互评；启用后填写匹配的 anthropic/openai-compatible 地址、模型及 Key。
 
-程序启动和显示登录页不需要数据库连接，也不会自动发送 AI 请求。
+程序启动登录页不会自动访问数据库或生成 AI 内容。详细步骤见用户手册和[运行与配置](docs/运行与配置.md)。
 
-## 2. 后续填写远程数据库和 AI 配置
+## 源码构建与测试
 
-复制 `config/application.example.properties` 为 `config/application.properties`，也可在登录页点击「连接配置」保存。
-
-```properties
-db.url=jdbc:mysql://YOUR_HOST:3306/peer_review_assistant?characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&connectTimeout=5000&socketTimeout=15000&sslMode=VERIFY_IDENTITY
-db.user=YOUR_DATABASE_USER
-db.password=YOUR_DATABASE_PASSWORD
-ai.enabled=false
-ai.baseUrl=https://api.anthropic.com
-ai.model=claude-opus-5-5
-ai.timeoutSeconds=90
-ai.apiKey=
-```
-
-- MySQL 可以在远程服务器上，不需要本机安装 MySQL。
-- 使用专用数据库，不要指向已有的其他业务库。数据库须由管理员事先建立，可参考 `sql/00-create-database.sql`。
-- 远程连接优先 `sslMode=VERIFY_IDENTITY`，配合有匹配主机名的服务器证书。当前服务器使用自动生成的证书，因此采用 SSH 安全获取的专用 CA + `VERIFY_CA`，没有关闭证书校验，也没有修改其他项目使用的服务器证书。
-- `db.trustStore` 指向 PKCS12 CA 信任库，路径相对于配置文件目录；`db.trustStorePassword` 为其口令。当前机器已配置完成，这些本地文件不进入提交包。
-- AI 连接使用 **Anthropic Messages API**，不是任意网站的 Key，也不是其他协议的聊天补全地址。需要其他供应商协议时应新增 `AdviceProvider` 实现。
-- `PEER_REVIEW_AI_KEY` 环境变量优先于文件内的 Key。无需将真实凭据发送到聊天中。
-- 配置含明文密码和 Key，仅保存在本机并限制文件权限；已被 Git 和后续分发清单排除。
-- 默认文件路径相对于工作目录。也可使用程序参数 `--config <路径>` 指定。
-
-## 3. 初始化与演示
-
-1. 登录页填写连接配置，点击「测试数据库连接」。
-2. 点击「初始化专用库」，自行设置初始教师账号和密码。
-3. 可勾选「加入合成演示数据」：生成 6 个学生和 2 份作业。
-4. 使用教师账号登录。
-5. 在「作业管理」选择「设计原则分析（可立即分配）」，设置 N=2，生成 12 条任务。
-6. 退出后以 `student01`—`student06` 登录，演示初始密码为 `Demo12345!`；进入「我的互评任务」填写人工评分和评语。
-7. 教师查看互评进度、统计结果；上方选择一份作业后导出 CSV。
-8. 「模块化实践（可提交）」用于演示提交与更新。
-
-初始化不执行 DROP/TRUNCATE；表已齐全时直接复用，不要求应用账号拥有 CREATE 权限。已有用户则拒绝再次填充初始数据。当前远程库已由管理员建齐表，运行账号只有该库的 SELECT/INSERT/UPDATE/DELETE 权限。
-
-部署到新数据库时，可由管理员执行 `src/main/resources/schema.sql`；若让应用自行建表，需要在该专用库临时授予必要的 CREATE/REFERENCES 权限。MySQL DDL 不具备整体事务回滚保证，遇到权限错误不要清空现有数据。
-
-演示账号是公开的合成测试账号，不要用于真实课堂；正式使用时不勾选演示数据，并自行创建学生账号。
-
-## 4. 重要业务规则
-
-- 学生账号属于这一个课堂应用，可查看应用内课程；没有增加课程选课/退课系统。
-- 每名学生每份作业保留一份提交，互评开始前允许覆盖更新。
-- 互评开始时间也是提交截止时间；以运行应用的电脑本地时间判定，应保持时钟和时区一致。
-- 只有已提交的学生参与互评。人数 M 至少为 2；`1 ≤ N < M`。
-- 只有教师在互评时间窗口内才能触发分配；成功后不允许重复分配。
-- 评分权重总和必须恰为 100%，每项先映射到自身区间内的 0—1，再乘权重；总分最终四舍五入为两位小数。
-- 有学生提交后冻结作业和评分规则，不允许删除，以免历史分数口径变化。
-- 已完成人工互评不可重复提交；提前结束互评要求任务全部完成，截止后可以保留未完成任务结束。
-- 未完成任务不计入平均/最高/最低分，界面同时展示已评和分配人数；无人评分时留空，不伪装成 0 分。
-- 盲评只屏蔽身份字段；学生若在提交正文中署名，系统不会自动推断并删除姓名。
-- 学生只可查看自己的提交、分配给自己的任务及自己的汇总成绩；教师只能管理自己创建的课程。
-- 正则采用 RE2/J，支持常用正则但不支持回溯引用和前后向断言，避免灾难性回溯。
-
-## 5. AI 使用
-
-后续填写 Key 并设置 `ai.enabled=true` 后，学生可在待评窗口点击「生成参考意见」。每次都会明确确认外发内容和费用。
-
-只发送作业要求、评分细则和正文，不发送数据库密码、用户名或作者姓名字段。正文自身仍可能包含个人信息，应先清理并征得必要授权。
-
-`ai.refusalFallback=auto`：只在官方 Anthropic 地址启用服务端拒绝回退，本地/第三方兼容网关不附加该专用参数；可显式设 true/false。SDK 自动重试始终关闭。HTTP 仅允许 localhost、127.0.0.1 和 ::1，其他地址必须 HTTPS。
-
-已使用配置的本地网关和模型完成一次官方 SDK 最小生成请求，返回 `OK`，未发送任何作业或学生数据。已验证真实 MySQL 的 TLS、登录、课程中文读写和回滚。完整课堂互评与真实 AI 辅助评审的业务演示仍需后续进行，不把最小连通性测试等同于全部验收通过。
-
-AI 调用失败不影响人工互评，AI 输出与人工分数/评语分别存储，不存在一键代填或代提交。
-
-## 6. 测试与后续构建
-
-运行测试（不会访问远程 MySQL，也不会调用付费 AI）：
+需要 JDK 17+、Maven 和依赖下载网络，在本目录执行：
 
 ```bash
 mvn test
-```
-
-桌面环境下测试会离屏渲染真实 Swing 组件，输出到 `target/ui-preview/`；无图形环境则跳过这一项。H2 只用于测试，未纳入产品运行依赖，不替代产品的 MySQL。
-
-你后续需要打包时运行：
-
-```bash
 mvn clean package
 ```
 
-构建脚本会生成自包含依赖的 JAR 和源码分发 ZIP；此步骤本轮没有执行。Windows 可使用 `build.cmd`，构建后通过 `run.cmd` 启动；也可在 IDEA 中执行 Maven 生命周期。
+输出 target/peer-review-assistant.jar 和 target/peer-review-assistant-submission.zip。build.cmd 可执行相同构建。重建会产生新的产物，应重新核对版本、哈希和运行结果。
 
-## 7. 代码和说明入口
+默认测试使用 H2（仅测试依赖）和本机模拟接口，不访问真实 MySQL 或付费 AI。源码中的显式 LiveAcceptance/PackagedLiveAgent 不属于默认测试发现；真实验收会写入合成数据，须阅读[实机运行说明](docs/live-acceptance.md)并显式启用。
 
-```text
-src/main/java/edu/course/peerreview/
-  domain/       不可变领域对象与状态
-  service/      业务用例、权限、事务和时间校验
-  scoring/      评分策略接口和归一化加权算法
-  allocation/   随机任务分配
-  dao/          JDBC、SQL 映射和连接作用域
-  ai/           参考意见契约、提示词和官方 SDK 实现
-  ui/           Swing 窗口、事件处理和后台任务
-  config/       本地配置文件
-  util/         密码、CSV、表驱动筛选
-src/main/resources/schema.sql   产品建表脚本
-src/test/java/                  单元/集成/并发/离屏界面测试
-```
+## 数据库与配置
 
+产品使用 MySQL，src/main/resources/schema.sql 定义 11 张表；sql/01-review-version.sql 与 sql/02-document-attachments.sql 用于旧版无损升级。部署和建表可能需要 CREATE/REFERENCES/ALTER 权限，正常业务使用专用库的必要读写权限。结构冲突不自动清库。
+
+config/application.example.properties 是无凭据样例。个人 application.properties、config/profiles 和验收 manifest 都是本地文件，不应提交或分发。配置保存明文口令，应限制权限。备份数据库不能仅复制客户端目录。
+
+## 规则摘要
+
+互评开始也是提交截止。只有已提交者参与，人数 M≥2，1≤N<M，禁止自评及重复。每项按自己的分值区间归一化，权重之和恰为100；无人评分时统计为空。已有提交后冻结作业规则与教师资料。AI 不代填、不代交，失败可继续人工互评。
+
+附件支持 PDF/DOC/DOCX/TXT/MD，最多3个、每个5 MiB；原件存 MySQL，下载校验字节和 SHA-256。盲评隐藏姓名和文件名，不清除正文或文档内部身份线索。无 OCR，预览是提取文字。
+
+## 设计与过程
+
+- [需求符合性核对](docs/需求符合性核对.md)
 - [设计与业务说明](docs/设计与业务说明.md)
 - [重构记录](docs/重构记录.md)
-- [界面设计与 WindowBuilder 说明](docs/界面设计.md)
 - [测试说明](docs/测试说明.md)
+- [WindowBuilder 实际使用](docs/WindowBuilder.md)
+- UML：docs/uml/classes.puml；docs/assets/
 
-报告中的个人学习体会和 WindowBuilder 实际操作证据应在后续真实完成后补充，不应虚构。
+WindowBuilder 证据来自代表性 LoginPanel 的真实 Design 编辑与保存，不声称所有窗口都是设计器生成，也不将自动化操作写成提交者私人手工经历。实际图形验收、已用隔离库验证不等于新装操作系统、空库部署或多机压力测试。

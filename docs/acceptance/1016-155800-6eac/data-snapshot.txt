@@ -1,0 +1,9 @@
+Public JDBC read-only verification for review mutations
+TLS=TLS_AES_128_GCM_SHA256
+newBatchSubmissions=3
+newBatchTasks=6
+newBatchEffectiveReviews=1
+newBatchCurrentReview=75.00,version=1
+UPDATE_REVIEW=1
+WITHDRAW_REVIEW=1
+previousAcceptanceScoresUnchanged=true

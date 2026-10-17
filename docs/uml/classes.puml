@@ -3,35 +3,70 @@ skinparam classAttributeIconSize 0
 skinparam defaultFontName Microsoft YaHei
 hide empty members
 package domain {
-  class User <<record>> { id : long
+  class User <<record>> {
+    id : long
     username : String
     name : String
     role : Role
   }
-  class Course <<record>> { id : long
+  class Course <<record>> {
+    id : long
     teacherId : long
   }
-  class Assignment <<record>> { id : long
+  class Assignment <<record>> {
+    id : long
+    courseId : long
     phase : Phase
     reviewOpen : LocalDateTime
     reviewDeadline : LocalDateTime
     blind : boolean
+    criteria : List<Criterion>
   }
-  class Criterion <<record>> { weight : BigDecimal
+  class Criterion <<record>> {
+    id : long
+    weight : BigDecimal
     min : BigDecimal
     max : BigDecimal
   }
-  class Submission <<record>> { content : String
+  class Submission <<record>> {
+    id : long
+    assignmentId : long
+    studentId : long
+    content : String
     submittedAt : LocalDateTime
   }
-  class ReviewTask <<record>> { status : TaskStatus
+  class ReviewTask <<record>> {
+    id : long
+    submissionId : long
+    reviewerId : long
+    status : TaskStatus
     total : BigDecimal
     comment : String
   }
-  class ReviewDetail <<record>> { scores : Map
+  class ReviewDetail <<record>> {
+    taskId : long
+    reviewId : long
+    version : long
+    scores : Map<Long,BigDecimal>
     total : BigDecimal
   }
-  class Advice <<record>>
+  class Advice <<record>> {
+    text : String
+    model : String
+    createdAt : LocalDateTime
+  }
+  class AttachmentInfo <<record>> {
+    id : long
+    name : String
+    size : long
+    sha256 : String
+    textStatus : String
+  }
+  class AttachmentDownload <<record>> {
+    info : AttachmentInfo
+    content : byte[]
+    text : String
+  }
 }
 User "1" -- "0..*" Course : 教师拥有
 Course "1" -- "0..*" Assignment
@@ -42,32 +77,85 @@ Submission "1" -- "0..*" ReviewTask
 User "1" -- "0..*" ReviewTask : 学生评审
 ReviewTask "1" -- "0..1" ReviewDetail
 ReviewTask "1" -- "0..1" Advice
-interface ScoringPolicy { validateCriteria(criteria)
- calculate(criteria, scores) : BigDecimal
+AttachmentDownload *-- AttachmentInfo
+note right of AttachmentInfo
+  元数据视图：数据库 attachments 保存归属。
+  assignment_id 必填；submission_id 可空。
+  教师资料和每份学生提交各最多 3 个文件。
+end note
+Assignment "1" -- "0..*" AttachmentInfo : 逻辑归属，非 record 字段
+Submission "0..1" -- "0..3" AttachmentInfo : 学生附件
+interface ScoringPolicy {
+  validateCriteria(criteria)
+  calculate(criteria, scores) : BigDecimal
 }
 class ScoreCalculator
 ScoreCalculator ..|> ScoringPolicy
-interface AdviceProvider { generate(input) : String }
+interface AdviceProvider {
+  generate(input) : String
+}
 class ClaudeAdviceProvider
+class OpenAiCompatibleAdviceProvider
 ClaudeAdviceProvider ..|> AdviceProvider
-class PeerReviewService
+OpenAiCompatibleAdviceProvider ..|> AdviceProvider
+class AiServices
+AiServices ..> ClaudeAdviceProvider : 按配置创建
+AiServices ..> OpenAiCompatibleAdviceProvider : 按配置创建
+class PeerReviewService {
+  saveAssignmentWithAttachments(...)
+  submitWithAttachments(...)
+  allocate(actor, assignmentId, reviewers)
+  previewScore(criteria, scores)
+  completeReview(actor, taskId, scores, comment)
+  updateReview(actor, taskId, reviewId, expectedVersion, scores, comment)
+  withdrawReview(actor, taskId, reviewId, expectedVersion)
+  adviceInput(actor, taskId)
+}
 class AuthService
 class InitializationService
+class SchemaManager
 class Repository
-class Database { read(work)
- transaction(work)
+class Database {
+  read(work)
+  transaction(work)
+}
+class RandomAllocator
+class AttachmentService {
+  assignmentFiles(actor, assignmentId)
+  reviewFiles(actor, taskId)
+  download(actor, id)
+}
+class AttachmentRepository
+class PreparedAttachment {
+  {static} read(path)
+  {static} of(name, content)
+}
+class DocumentText {
+  {static} extract(extension, bytes)
 }
 class WorkspaceFrame
 class ReviewDialog
 class LoginFrame
+class LoginPanel
+class AttachmentEditorPanel
+class AttachmentViewerPanel
+LoginFrame *-- LoginPanel : 视图与事件分离
 PeerReviewService --> ScoringPolicy
 PeerReviewService --> Repository
 PeerReviewService --> Database
 PeerReviewService --> RandomAllocator
+PeerReviewService --> AttachmentRepository
 AuthService --> Database
 InitializationService --> Database
+SchemaManager --> Database
+AttachmentService --> Database
+AttachmentService --> AttachmentRepository
+PreparedAttachment ..> DocumentText
+AttachmentEditorPanel ..> PreparedAttachment
+AttachmentViewerPanel ..> AttachmentDownload
 WorkspaceFrame --> PeerReviewService
 WorkspaceFrame --> AuthService
+WorkspaceFrame --> AttachmentService
 ReviewDialog --> PeerReviewService
 ReviewDialog --> AdviceProvider
 LoginFrame --> AuthService

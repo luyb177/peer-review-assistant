@@ -1,0 +1,7 @@
+DOC interoperability test fixture: simple.doc
+Source: Apache POI test-data/document/simple.doc
+https://github.com/apache/poi/blob/trunk/test-data/document/simple.doc
+Downloaded from the official Apache POI repository for format-compatibility tests only.
+Apache POI project license: Apache License 2.0
+https://www.apache.org/licenses/LICENSE-2.0
+The fixture is not application source code or student coursework authored by this project.

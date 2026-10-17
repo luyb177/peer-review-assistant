@@ -1,0 +1,14 @@
+2026-10-16T08:39:45.640451Z Starting actual Eclipse WindowBuilder verification
+2026-10-16T08:39:46.815794Z Project built with Java nature; source folder linked to actual product sources
+2026-10-16T08:39:54.584660200Z Actual editor class=org.eclipse.wb.internal.core.editor.multi.DesignerEditor
+2026-10-16T08:39:58.340576100Z Design page requested
+2026-10-16T08:39:58.430731300Z Parsed root model=org.eclipse.wb.internal.swing.model.component.JPanelInfo
+2026-10-16T08:39:58.433239Z MODEL org.eclipse.wb.internal.swing.model.component.JPanelInfo children=8 text=null
+2026-10-16T08:39:58.435250700Z MODEL org.eclipse.wb.internal.swing.model.layout.gbl.GridBagLayoutInfo children=0 text=null
+2026-10-16T08:39:58.436248700Z MODEL org.eclipse.wb.internal.swing.model.component.ContainerInfo children=1 text=进入课堂
+2026-10-16T08:40:00.012264700Z Captured Eclipse window only: 1440 882 01-windowbuilder-design-before.png
+2026-10-16T08:40:00.013771400Z Real Design page, component tree and text property selected
+2026-10-16T08:40:00.569188100Z Captured Eclipse window only: 1440 882 02-windowbuilder-property-edit.png
+2026-10-16T08:40:01.800532500Z Captured Eclipse window only: 1440 882 03-windowbuilder-generated-source.png
+2026-10-16T08:40:03.359158700Z Captured Eclipse window only: 1440 882 04-windowbuilder-design-after.png
+2026-10-16T08:40:03.362167300Z PASS Actual WindowBuilder parsed, edited property, generated Java and saved the product source

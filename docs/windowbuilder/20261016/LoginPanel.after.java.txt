@@ -1,0 +1,199 @@
+package edu.course.peerreview.ui;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+
+/** 纯 Swing 视图，供 WindowBuilder Design 编辑；构造时不访问配置、数据库或 AI。 */
+public final class LoginPanel extends JPanel {
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JButton loginButton;
+    private JButton configButton;
+    private JButton testConnectionButton;
+    private JButton initializeButton;
+    private JLabel feedbackLabel;
+
+    /** @wbp.parser.entryPoint */
+    public LoginPanel() {
+        setBackground(Color.WHITE);
+        setBorder(new EmptyBorder(30, 30, 30, 30));
+        setLayout(new GridLayout(1, 2, 28, 0));
+        setPreferredSize(new Dimension(984, 582));
+
+        JPanel introductionPanel = new JPanel();
+        introductionPanel.setBackground(new Color(230, 240, 233));
+        introductionPanel.setBorder(new EmptyBorder(42, 26, 30, 26));
+        introductionPanel.setLayout(new GridBagLayout());
+        add(introductionPanel);
+
+        JLabel productLabel = new JLabel("课堂同伴互评");
+        productLabel.setFont(new Font("Microsoft YaHei UI", Font.BOLD, 27));
+        productLabel.setForeground(new Color(32, 58, 53));
+        GridBagConstraints productConstraints = new GridBagConstraints();
+        productConstraints.gridx = 0;
+        productConstraints.gridy = 0;
+        productConstraints.anchor = GridBagConstraints.WEST;
+        productConstraints.fill = GridBagConstraints.HORIZONTAL;
+        productConstraints.weightx = 1;
+        introductionPanel.add(productLabel, productConstraints);
+
+        feedbackLabel = new JLabel("让每一条反馈，都有依据。");
+        GridBagConstraints feedbackConstraints = new GridBagConstraints();
+        feedbackConstraints.gridx = 0;
+        feedbackConstraints.gridy = 1;
+        feedbackConstraints.anchor = GridBagConstraints.WEST;
+        feedbackConstraints.insets = new Insets(16, 0, 40, 0);
+        introductionPanel.add(feedbackLabel, feedbackConstraints);
+
+        JLabel teacherLabel = new JLabel("教师制定规则");
+        teacherLabel.setFont(new Font("Microsoft YaHei UI", Font.BOLD, 17));
+        teacherLabel.setForeground(new Color(32, 58, 53));
+        GridBagConstraints teacherConstraints = new GridBagConstraints();
+        teacherConstraints.gridx = 0;
+        teacherConstraints.gridy = 2;
+        teacherConstraints.anchor = GridBagConstraints.WEST;
+        introductionPanel.add(teacherLabel, teacherConstraints);
+
+        JLabel teacherDescription = new JLabel("发布作业，分配互评，汇总结果");
+        GridBagConstraints teacherDescriptionConstraints = new GridBagConstraints();
+        teacherDescriptionConstraints.gridx = 0;
+        teacherDescriptionConstraints.gridy = 3;
+        teacherDescriptionConstraints.anchor = GridBagConstraints.WEST;
+        teacherDescriptionConstraints.insets = new Insets(4, 0, 24, 0);
+        introductionPanel.add(teacherDescription, teacherDescriptionConstraints);
+
+        JLabel studentLabel = new JLabel("学生独立判断");
+        studentLabel.setFont(new Font("Microsoft YaHei UI", Font.BOLD, 17));
+        studentLabel.setForeground(new Color(32, 58, 53));
+        GridBagConstraints studentConstraints = new GridBagConstraints();
+        studentConstraints.gridx = 0;
+        studentConstraints.gridy = 4;
+        studentConstraints.anchor = GridBagConstraints.WEST;
+        introductionPanel.add(studentLabel, studentConstraints);
+
+        JLabel studentDescription = new JLabel("逐项评分，写下具体的人工评语");
+        GridBagConstraints studentDescriptionConstraints = new GridBagConstraints();
+        studentDescriptionConstraints.gridx = 0;
+        studentDescriptionConstraints.gridy = 5;
+        studentDescriptionConstraints.anchor = GridBagConstraints.WEST;
+        studentDescriptionConstraints.insets = new Insets(4, 0, 24, 0);
+        introductionPanel.add(studentDescription, studentDescriptionConstraints);
+
+        JLabel aiLabel = new JLabel("AI 只作参考");
+        aiLabel.setFont(new Font("Microsoft YaHei UI", Font.BOLD, 17));
+        aiLabel.setForeground(new Color(32, 58, 53));
+        GridBagConstraints aiConstraints = new GridBagConstraints();
+        aiConstraints.gridx = 0;
+        aiConstraints.gridy = 6;
+        aiConstraints.anchor = GridBagConstraints.WEST;
+        introductionPanel.add(aiLabel, aiConstraints);
+
+        JLabel aiDescription = new JLabel("不会自动填分，也不会代交评审");
+        GridBagConstraints aiDescriptionConstraints = new GridBagConstraints();
+        aiDescriptionConstraints.gridx = 0;
+        aiDescriptionConstraints.gridy = 7;
+        aiDescriptionConstraints.anchor = GridBagConstraints.NORTHWEST;
+        aiDescriptionConstraints.weighty = 1;
+        aiDescriptionConstraints.insets = new Insets(4, 0, 0, 0);
+        introductionPanel.add(aiDescription, aiDescriptionConstraints);
+
+        JPanel formPanel = new JPanel();
+        formPanel.setBackground(Color.WHITE);
+        formPanel.setBorder(new EmptyBorder(40, 0, 10, 4));
+        formPanel.setLayout(new GridBagLayout());
+        add(formPanel);
+
+        JLabel headingLabel = new JLabel("登录互评课堂");
+        headingLabel.setFont(new Font("Microsoft YaHei UI", Font.BOLD, 25));
+        headingLabel.setForeground(new Color(32, 58, 53));
+        GridBagConstraints headingConstraints = new GridBagConstraints();
+        headingConstraints.gridx = 0;
+        headingConstraints.gridy = 0;
+        headingConstraints.anchor = GridBagConstraints.WEST;
+        headingConstraints.fill = GridBagConstraints.HORIZONTAL;
+        headingConstraints.weightx = 1;
+        headingConstraints.insets = new Insets(0, 0, 24, 0);
+        formPanel.add(headingLabel, headingConstraints);
+
+        JPanel usernameRow = new JPanel(new BorderLayout(14, 0));
+        usernameRow.setOpaque(false);
+        usernameRow.setBorder(new EmptyBorder(7, 0, 7, 0));
+        JLabel usernameLabel = new JLabel("用户名");
+        usernameLabel.setPreferredSize(new Dimension(130, 30));
+        usernameRow.add(usernameLabel, BorderLayout.WEST);
+        usernameField = new JTextField(22);
+        usernameLabel.setLabelFor(usernameField);
+        usernameRow.add(usernameField, BorderLayout.CENTER);
+        GridBagConstraints usernameConstraints = new GridBagConstraints();
+        usernameConstraints.gridx = 0;
+        usernameConstraints.gridy = 1;
+        usernameConstraints.fill = GridBagConstraints.HORIZONTAL;
+        formPanel.add(usernameRow, usernameConstraints);
+
+        JPanel passwordRow = new JPanel(new BorderLayout(14, 0));
+        passwordRow.setOpaque(false);
+        passwordRow.setBorder(new EmptyBorder(7, 0, 7, 0));
+        JLabel passwordLabel = new JLabel("密码");
+        passwordLabel.setPreferredSize(new Dimension(130, 30));
+        passwordRow.add(passwordLabel, BorderLayout.WEST);
+        passwordField = new JPasswordField(22);
+        passwordLabel.setLabelFor(passwordField);
+        passwordRow.add(passwordField, BorderLayout.CENTER);
+        GridBagConstraints passwordConstraints = new GridBagConstraints();
+        passwordConstraints.gridx = 0;
+        passwordConstraints.gridy = 2;
+        passwordConstraints.fill = GridBagConstraints.HORIZONTAL;
+        formPanel.add(passwordRow, passwordConstraints);
+
+        JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        actionsPanel.setOpaque(false);
+        loginButton = new JButton("登录");
+        loginButton.setBackground(new Color(35, 106, 86));
+        loginButton.setForeground(Color.WHITE);
+        actionsPanel.add(loginButton);
+        configButton = new JButton("连接配置");
+        actionsPanel.add(configButton);
+        GridBagConstraints actionsConstraints = new GridBagConstraints();
+        actionsConstraints.gridx = 0;
+        actionsConstraints.gridy = 3;
+        actionsConstraints.fill = GridBagConstraints.HORIZONTAL;
+        formPanel.add(actionsPanel, actionsConstraints);
+
+        JLabel setupLabel = new JLabel("首次使用？先填写远程 MySQL 连接配置。");
+        GridBagConstraints setupConstraints = new GridBagConstraints();
+        setupConstraints.gridx = 0;
+        setupConstraints.gridy = 4;
+        setupConstraints.anchor = GridBagConstraints.WEST;
+        setupConstraints.insets = new Insets(28, 0, 0, 0);
+        formPanel.add(setupLabel, setupConstraints);
+
+        JPanel setupActionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        setupActionsPanel.setOpaque(false);
+        testConnectionButton = new JButton("测试数据库连接");
+        setupActionsPanel.add(testConnectionButton);
+        initializeButton = new JButton("初始化专用库");
+        setupActionsPanel.add(initializeButton);
+        GridBagConstraints setupActionsConstraints = new GridBagConstraints();
+        setupActionsConstraints.gridx = 0;
+        setupActionsConstraints.gridy = 5;
+        setupActionsConstraints.fill = GridBagConstraints.HORIZONTAL;
+        formPanel.add(setupActionsPanel, setupActionsConstraints);
+
+        JLabel safetyLabel = new JLabel("<html>初始化不会创建服务器数据库或清空已有表。<br>已有账号请直接登录，无需再次初始化。</html>");
+        GridBagConstraints safetyConstraints = new GridBagConstraints();
+        safetyConstraints.gridx = 0;
+        safetyConstraints.gridy = 6;
+        safetyConstraints.anchor = GridBagConstraints.NORTHWEST;
+        safetyConstraints.weighty = 1;
+        safetyConstraints.insets = new Insets(18, 0, 0, 0);
+        formPanel.add(safetyLabel, safetyConstraints);
+    }
+
+    public JTextField getUsernameField() { return usernameField; }
+    public JPasswordField getPasswordField() { return passwordField; }
+    public JButton getLoginButton() { return loginButton; }
+    public JButton getConfigButton() { return configButton; }
+    public JButton getTestConnectionButton() { return testConnectionButton; }
+    public JButton getInitializeButton() { return initializeButton; }
+}

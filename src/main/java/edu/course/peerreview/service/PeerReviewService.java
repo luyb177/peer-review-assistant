@@ -1,6 +1,7 @@
 package edu.course.peerreview.service;
 
 import edu.course.peerreview.allocation.RandomAllocator;
+import edu.course.peerreview.attachment.AttachmentChanges;
 import edu.course.peerreview.dao.*;
 import edu.course.peerreview.domain.Domain.*;
 import edu.course.peerreview.scoring.ScoreCalculator;
@@ -17,6 +18,7 @@ import static edu.course.peerreview.service.AuthService.*;
 public final class PeerReviewService {
     private final Database db;
     private final Repository repo = new Repository();
+    private final AttachmentRepository attachments = new AttachmentRepository();
     private final ScoringPolicy scoring;
     private final RandomAllocator allocator = new RandomAllocator();
     private final Clock clock;
@@ -62,12 +64,16 @@ public final class PeerReviewService {
     }
     public void saveAssignment(User actor, long id, long courseId, String title, String description,
                                LocalDateTime open, LocalDateTime deadline, boolean blind, List<Criterion> criteria) {
+        saveAssignmentWithAttachments(actor,id,courseId,title,description,open,deadline,blind,criteria,null);
+    }
+    public long saveAssignmentWithAttachments(User actor,long id,long courseId,String title,String description,
+                                              LocalDateTime open,LocalDateTime deadline,boolean blind,List<Criterion> criteria,AttachmentChanges changes) {
         requireTeacher(actor);
         String name = Validation.text(title, "作业名称", 160);
         String desc = Validation.text(description, "作业说明", 10000);
         if (open == null || deadline == null || !deadline.isAfter(open) || !open.isAfter(now())) throw new BusinessException("互评开始时间须晚于当前时间，截止时间须晚于开始时间。");
         scoring.validateCriteria(criteria);
-        db.transaction(c -> {
+        return db.transaction(c -> {
             ownCourse(c, actor, courseId);
             long assignmentId = id;
             if (id == 0) {
@@ -80,8 +86,9 @@ public final class PeerReviewService {
                 update(c, "DELETE FROM criteria WHERE assignment_id=?", id);
             }
             for (Criterion criterion : criteria) insert(c, "INSERT INTO criteria(assignment_id,name,weight,min_score,max_score) VALUES(?,?,?,?,?)", assignmentId, criterion.name().strip(), criterion.weight(), criterion.min(), criterion.max());
+            attachments.apply(c,actor.id(),assignmentId,null,changes,now());
             repo.log(c, actor.id(), "SAVE_ASSIGNMENT", "作业 " + assignmentId);
-            return null;
+            return assignmentId;
         });
     }
     public void deleteAssignment(User actor, long id) {
@@ -98,15 +105,21 @@ public final class PeerReviewService {
         if (a.phase() != Phase.SUBMISSION || count(c, "SELECT COUNT(*) FROM submissions WHERE assignment_id=?", a.id()) > 0)
             throw new BusinessException("已有提交或已进入互评阶段，评分规则和作业不能修改或删除；请新建作业。");
     }
-    public void submit(User actor, long assignmentId, String content) {
+    public void submit(User actor, long assignmentId, String content) { submitWithAttachments(actor,assignmentId,content,null); }
+    public void submitWithAttachments(User actor,long assignmentId,String content,AttachmentChanges changes) {
         requireStudent(actor);
-        String text = Validation.text(content, "作业内容", 20000);
+        String text = content==null||content.isBlank()?"":Validation.text(content, "作业内容", 20000);
         db.transaction(c -> {
             Assignment a = visible(c, actor, assignmentId, true);
             if (a.phase() != Phase.SUBMISSION || !now().isBefore(a.reviewOpen())) throw new BusinessException("提交已截止或互评已经开始。");
             List<Submission> old = repo.submissions(c, assignmentId, actor.id());
-            if (old.isEmpty()) insert(c, "INSERT INTO submissions(assignment_id,student_id,content,submitted_at) VALUES(?,?,?,?)", assignmentId, actor.id(), text, now());
-            else update(c, "UPDATE submissions SET content=?,submitted_at=? WHERE id=?", text, now(), old.get(0).id());
+            long previous=old.isEmpty()?-1:old.get(0).id();
+            int count=attachments.resultingCount(c,assignmentId,previous,changes);
+            if(text.isBlank()&&count==0)throw new BusinessException("作业内容不能为空：请填写文本或添加至少一个文档附件。");
+            long submissionId;
+            if (old.isEmpty()) submissionId=insert(c, "INSERT INTO submissions(assignment_id,student_id,content,submitted_at) VALUES(?,?,?,?)", assignmentId, actor.id(), text, now());
+            else {submissionId=old.get(0).id();update(c, "UPDATE submissions SET content=?,submitted_at=? WHERE id=?", text, now(), submissionId);}
+            attachments.apply(c,actor.id(),assignmentId,submissionId,changes,now());
             repo.log(c, actor.id(), "SUBMIT", "作业 " + assignmentId);
             return null;
         });
@@ -131,18 +144,21 @@ public final class PeerReviewService {
     public List<ReviewTask> tasks(User actor, long assignmentId) {
         return db.read(c -> {
             Assignment a = visible(c, actor, assignmentId, false);
-            return repo.tasks(c, assignmentId, actor.role() == Role.TEACHER ? null : actor.id()).stream().map(t -> anonymize(actor, a, t)).toList();
+            List<ReviewTask> result=new ArrayList<>();
+            for(ReviewTask task:repo.tasks(c,assignmentId,actor.role()==Role.TEACHER?null:actor.id()))result.add(anonymize(c,actor,a,task));
+            return List.copyOf(result);
         });
     }
     public ReviewTask task(User actor, long taskId) {
         return db.read(c -> {
             ReviewTask t = authorizedTask(c, actor, taskId);
-            return anonymize(actor, visible(c, actor, t.assignmentId(), false), t);
+            return anonymize(c, actor, visible(c, actor, t.assignmentId(), false), t);
         });
     }
-    private ReviewTask anonymize(User actor, Assignment a, ReviewTask t) {
+    private ReviewTask anonymize(Connection c,User actor, Assignment a, ReviewTask t) throws SQLException {
         String author = actor.role() == Role.STUDENT && a.blind() ? "匿名提交" : t.author();
-        return new ReviewTask(t.id(), t.assignmentId(), t.submissionId(), t.reviewerId(), author, t.reviewer(), t.content(), t.status(), t.total(), t.comment());
+        String content=combinedText(t.content(),attachments.texts(c,a.id(),t.submissionId()),false);
+        return new ReviewTask(t.id(), t.assignmentId(), t.submissionId(), t.reviewerId(), author, t.reviewer(), content, t.status(), t.total(), t.comment());
     }
     public ReviewDetail reviewDetail(User actor, long taskId) {
         return db.read(c -> { authorizedTask(c, actor, taskId); return repo.detail(c, taskId); });
@@ -163,6 +179,48 @@ public final class PeerReviewService {
             return total;
         });
     }
+    public BigDecimal updateReview(User actor, long taskId, long reviewId, long expectedVersion,
+                                   Map<Long, BigDecimal> scores, String comment) {
+        requireStudent(actor);
+        String text = Validation.text(comment, "人工评语", 5000);
+        return db.transaction(c -> {
+            ReviewTask initial = authorizedTask(c, actor, taskId);
+            Assignment a = visible(c, actor, initial.assignmentId(), true);
+            ReviewTask task = authorizedTask(c, actor, taskId);
+            ReviewDetail old = mutableReview(c, a, task, reviewId, expectedVersion);
+            BigDecimal total = scoring.calculate(a.criteria(), scores);
+            int changed = update(c, "UPDATE reviews SET total=?,comment=?,reviewed_at=?,version=version+1 WHERE id=? AND task_id=? AND version=?",
+                    total, text, now(), reviewId, taskId, expectedVersion);
+            if (changed != 1) throw staleReview();
+            update(c, "DELETE FROM review_scores WHERE review_id=?", reviewId);
+            for (var score : scores.entrySet()) update(c, "INSERT INTO review_scores(review_id,criterion_id,score) VALUES(?,?,?)", reviewId, score.getKey(), score.getValue());
+            repo.log(c, actor.id(), "UPDATE_REVIEW", "任务 " + taskId + "，记录 " + reviewId + "，版本 " + expectedVersion + "→" + (expectedVersion + 1) + "，总分 " + old.total() + "→" + total);
+            return total;
+        });
+    }
+    public void withdrawReview(User actor, long taskId, long reviewId, long expectedVersion) {
+        requireStudent(actor);
+        db.transaction(c -> {
+            ReviewTask initial = authorizedTask(c, actor, taskId);
+            Assignment a = visible(c, actor, initial.assignmentId(), true);
+            ReviewTask task = authorizedTask(c, actor, taskId);
+            ReviewDetail old = mutableReview(c, a, task, reviewId, expectedVersion);
+            update(c, "DELETE FROM review_scores WHERE review_id=?", reviewId);
+            int removed = update(c, "DELETE FROM reviews WHERE id=? AND task_id=? AND version=?", reviewId, taskId, expectedVersion);
+            if (removed != 1) throw staleReview();
+            update(c, "UPDATE review_tasks SET status=? WHERE id=?", TaskStatus.PENDING, taskId);
+            repo.log(c, actor.id(), "WITHDRAW_REVIEW", "任务 " + taskId + "，记录 " + reviewId + "，版本 " + expectedVersion + "，原总分 " + old.total() + "，恢复待互评");
+            return null;
+        });
+    }
+    private ReviewDetail mutableReview(Connection c, Assignment a, ReviewTask task, long reviewId, long version) throws SQLException {
+        requireReviewWindow(a);
+        if (task.status() != TaskStatus.COMPLETED) throw new BusinessException("该任务尚未完成或已撤回，请刷新任务列表。");
+        ReviewDetail detail = repo.detail(c, task.id());
+        if (detail == null || detail.reviewId() != reviewId || detail.version() != version) throw staleReview();
+        return detail;
+    }
+    private BusinessException staleReview() { return new BusinessException("互评记录已被修改、撤回或重新提交，请关闭当前窗口并刷新后重试。"); }
     public void closeAssignment(User actor, long assignmentId) {
         requireTeacher(actor);
         db.transaction(c -> {
@@ -181,14 +239,28 @@ public final class PeerReviewService {
     public Advice advice(User actor, long taskId) {
         return db.read(c -> { authorizedTask(c, actor, taskId); return repo.advice(c, taskId); });
     }
-    public record AdviceInput(Assignment assignment, String submission) { }
+    public record AdviceInput(Assignment assignment, String submission, String materials) {
+        public AdviceInput(Assignment assignment,String submission){this(assignment,submission,"");}
+    }
+    private String combinedText(String body,List<String[]> files,boolean requireReadable) {
+        StringBuilder text=new StringBuilder(body);boolean readable=!body.isBlank();int number=0;
+        for(String[] file:files){number++;text.append("\n[文档附件 ").append(number).append("]\n");
+            if("EXTRACTED".equals(file[0])){text.append(file[1]);readable=true;}
+            else text.append("此附件未提供可提取的全文，状态：").append(file[0]).append("。不得据此假称已阅读文件内容。");
+        }
+        if(requireReadable&&!readable)throw new BusinessException("本次提交没有可供 AI 阅读的正文；扫描/加密/超长文档请补充文本摘要，仍可人工下载评审。");
+        return text.toString();
+    }
     public AdviceInput adviceInput(User actor, long taskId) {
         requireStudent(actor);
         return db.read(c -> {
             ReviewTask task = authorizedTask(c, actor, taskId);
             Assignment a = visible(c, actor, task.assignmentId(), false);
             requirePending(a, task);
-            return new AdviceInput(a, task.content());
+            String submission=combinedText(task.content(),attachments.texts(c,a.id(),task.submissionId()),true);
+            String materials=combinedText("",attachments.texts(c,a.id(),null),false);
+            if(submission.length()+materials.length()+a.description().length()>60000)throw new BusinessException("正文及附件可读文本总量超过 60000 字符，请精简正文或附件后请求 AI；系统不会静默截断文件。");
+            return new AdviceInput(a, submission, materials);
         });
     }
     public void saveAdvice(User actor, long taskId, String text, String model) {
@@ -209,9 +281,14 @@ public final class PeerReviewService {
         requireTeacher(actor);
         return db.read(c -> query(c, "SELECT l.created_at,u.username,l.action,l.detail FROM operation_logs l JOIN users u ON u.id=l.actor_id WHERE l.actor_id=? OR l.actor_id IN (SELECT id FROM users WHERE role='STUDENT') ORDER BY l.id DESC LIMIT 300", r -> new String[]{r.getString(1), r.getString(2), r.getString(3), r.getString(4)}, actor.id()));
     }
+    private void requireReviewWindow(Assignment a) {
+        LocalDateTime current = now();
+        if (a.phase() != Phase.REVIEWING || current.isBefore(a.reviewOpen()) || !current.isBefore(a.reviewDeadline()))
+            throw new BusinessException("当前不在可互评阶段或已截止，不能提交、修改或撤回。");
+    }
     private void requirePending(Assignment a, ReviewTask task) {
-        if (a.phase() != Phase.REVIEWING || now().isBefore(a.reviewOpen()) || !now().isBefore(a.reviewDeadline())) throw new BusinessException("当前不在可互评阶段或已截止。");
-        if (task.status() != TaskStatus.PENDING) throw new BusinessException("该任务已完成，不能重复提交。");
+        requireReviewWindow(a);
+        if (task.status() != TaskStatus.PENDING) throw new BusinessException("该任务已完成，请使用修改评分或撤回功能，不能重复提交。");
     }
     private Assignment visible(Connection c, User actor, long id, boolean lock) throws SQLException {
         Assignment a = repo.assignment(c, id, lock);

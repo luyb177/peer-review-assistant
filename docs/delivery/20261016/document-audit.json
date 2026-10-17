@@ -1,0 +1,43 @@
+{
+  "markdown_audit": "PASS",
+  "schema_tables": 11,
+  "schema_field_occurrences": 62,
+  "unique_field_names": 46,
+  "missing_fields": [],
+  "course_sections": 9,
+  "chapters": 10,
+  "image_references": [
+    {
+      "document": "课程设计报告.md",
+      "image": "assets/domain-classes.png"
+    },
+    {
+      "document": "课程设计报告.md",
+      "image": "assets/implementation-classes.png"
+    },
+    {
+      "document": "课程设计报告.md",
+      "image": "acceptance/1016-203530-c2f4/A01-teacher-three-documents.png"
+    },
+    {
+      "document": "课程设计报告.md",
+      "image": "acceptance/1016-203530-c2f4/05a-real-ai-reference.png"
+    },
+    {
+      "document": "课程设计报告.md",
+      "image": "acceptance/1016-203530-c2f4/A05-complete-results.png"
+    },
+    {
+      "document": "课程设计报告.md",
+      "image": "windowbuilder/20261016/04-windowbuilder-design-after.png"
+    },
+    {
+      "document": "用户简易使用手册.md",
+      "image": "acceptance/1016-203530-c2f4/A05-complete-results.png"
+    },
+    {
+      "document": "用户简易使用手册.md",
+      "image": "acceptance/1016-203530-c2f4/A04-blind-file-review-1.png"
+    }
+  ]
+}

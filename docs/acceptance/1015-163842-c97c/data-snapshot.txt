@@ -1,0 +1,9 @@
+Read-only snapshot for synthetic batch 1015-163842-c97c
+assignmentPhase=CLOSED
+syntheticStudents=3
+submissions=3
+tasks=6
+completedTasks=6
+reviews=6
+criterionScores=18
+aiAdviceRecords=1

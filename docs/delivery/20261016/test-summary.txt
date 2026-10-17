@@ -1,0 +1,27 @@
+2026-10-16 当前 1.1.0 默认测试复跑
+实际测试 JVM：Temurin Java 17.0.20.1
+外部 MySQL / 付费模型请求：无
+
+edu.course.peerreview.AiAndTransactionTest: tests=3, failures=0, errors=0, skipped=0
+edu.course.peerreview.AiConfigurationTest: tests=4, failures=0, errors=0, skipped=0
+edu.course.peerreview.AiEndpointTest: tests=15, failures=0, errors=0, skipped=0
+edu.course.peerreview.AttachmentDocumentsTest: tests=16, failures=0, errors=0, skipped=0
+edu.course.peerreview.AttachmentServiceTest: tests=10, failures=0, errors=0, skipped=0
+edu.course.peerreview.ConfigurationSwitchTest: tests=3, failures=0, errors=0, skipped=0
+edu.course.peerreview.InitializationServiceTest: tests=2, failures=0, errors=0, skipped=0
+edu.course.peerreview.PeerReviewServiceTest: tests=11, failures=0, errors=0, skipped=0
+edu.course.peerreview.RandomAllocatorTest: tests=3, failures=0, errors=0, skipped=0
+edu.course.peerreview.ReviewMutationTest: tests=14, failures=0, errors=0, skipped=0
+edu.course.peerreview.SchemaManagerTest: tests=13, failures=0, errors=0, skipped=0
+edu.course.peerreview.ScoreCalculatorTest: tests=12, failures=0, errors=0, skipped=0
+edu.course.peerreview.ScoringPolicyTest: tests=1, failures=0, errors=0, skipped=0
+edu.course.peerreview.ui.AttachmentUiTest: tests=2, failures=0, errors=0, skipped=0
+edu.course.peerreview.ui.LoginPanelTest: tests=3, failures=0, errors=0, skipped=0
+edu.course.peerreview.ui.ReviewMutationUiTest: tests=4, failures=0, errors=0, skipped=0
+edu.course.peerreview.ui.SwingPreviewTest: tests=1, failures=0, errors=0, skipped=0
+edu.course.peerreview.UtilitiesTest: tests=6, failures=0, errors=0, skipped=0
+
+Tests run: 123, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+
+现有 JAR 仍为 1.0.0，本次未重新打包。

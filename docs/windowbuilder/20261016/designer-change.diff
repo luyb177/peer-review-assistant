@@ -1,0 +1,11 @@
+--- before/LoginPanel.java
++++ after/LoginPanel.java
+@@ -104,7 +104,7 @@
+         formPanel.setLayout(new GridBagLayout());
+         add(formPanel);
+ 
+-        JLabel headingLabel = new JLabel("进入课堂");
++        JLabel headingLabel = new JLabel("登录互评课堂");
+         headingLabel.setFont(new Font("Microsoft YaHei UI", Font.BOLD, 25));
+         headingLabel.setForeground(new Color(32, 58, 53));
+         GridBagConstraints headingConstraints = new GridBagConstraints();
